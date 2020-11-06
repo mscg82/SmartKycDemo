@@ -1,13 +1,14 @@
 package com.example.demo.smartKyc;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @ExtendWith(MockitoExtension.class)
 public class SmartKycServiceTest
@@ -16,6 +17,73 @@ public class SmartKycServiceTest
     private SmartKycRepository smartKycRepository;
 
     private SmartKycService smartKycService = new SmartKycService(smartKycRepository);
+
+    @Test
+    void testInvalidPieces1()
+    {
+    	WrapperSmartKycDTO wrapperSmartKycDTO = new WrapperSmartKycDTO();
+        wrapperSmartKycDTO.setFirstValue(createSmartKycDTO(1, 15));
+        wrapperSmartKycDTO.setSmartKycDTOS(Collections.singleton(createSmartKycDTO(15, 5)));
+
+        Integer highestValue = smartKycService.getChainWithHighestValue(wrapperSmartKycDTO);
+        // this should fail somewhere, either in building the pieces or in the service
+        Assertions.assertThat(highestValue).isNotEqualTo(15);
+    }
+
+    @Test
+    void testInvalidPieces2()
+    {
+    	WrapperSmartKycDTO wrapperSmartKycDTO = new WrapperSmartKycDTO();
+    	wrapperSmartKycDTO.setFirstValue(createSmartKycDTO(1, 5));
+    	Set<SmartKycDTO> pieces = new HashSet<>();
+    	pieces.add(createSmartKycDTO(5, 5));
+    	pieces.add(createSmartKycDTO(5, 4));
+    	wrapperSmartKycDTO.setSmartKycDTOS(pieces);
+
+    	Integer highestValue = smartKycService.getChainWithHighestValue(wrapperSmartKycDTO);
+    	// this should fail somewhere, either in building the pieces or in the service
+    	Assertions.assertThat(highestValue).isNotEqualTo(5);
+    }
+
+    @Test
+    void testTwoEqualsPieces()
+    {
+    	WrapperSmartKycDTO wrapperSmartKycDTO = new WrapperSmartKycDTO();
+        wrapperSmartKycDTO.setFirstValue(createSmartKycDTO(1, 3));
+        wrapperSmartKycDTO.setSmartKycDTOS(Collections.singleton(createSmartKycDTO(1, 3)));
+
+        Integer highestValue = smartKycService.getChainWithHighestValue(wrapperSmartKycDTO);
+        Assertions.assertThat(highestValue).isEqualTo(3);
+    }
+
+    @Test
+    void testSetWithTwoEqualsPieces()
+    {
+    	WrapperSmartKycDTO wrapperSmartKycDTO = new WrapperSmartKycDTO();
+    	wrapperSmartKycDTO.setFirstValue(createSmartKycDTO(1, 3));
+    	Set<SmartKycDTO> pieces = new HashSet<>();
+    	pieces.add(createSmartKycDTO(3, 5));
+    	pieces.add(createSmartKycDTO(5, 1));
+    	pieces.add(createSmartKycDTO(1, 3));
+    	wrapperSmartKycDTO.setSmartKycDTOS(pieces);
+
+    	Integer highestValue = smartKycService.getChainWithHighestValue(wrapperSmartKycDTO);
+    	Assertions.assertThat(highestValue).isEqualTo(9);
+    }
+
+    @Test
+    void testSetWithPiecesAttachingOnBothSides()
+    {
+    	WrapperSmartKycDTO wrapperSmartKycDTO = new WrapperSmartKycDTO();
+    	wrapperSmartKycDTO.setFirstValue(createSmartKycDTO(1, 3));
+    	Set<SmartKycDTO> pieces = new HashSet<>();
+    	pieces.add(createSmartKycDTO(3, 5));
+    	pieces.add(createSmartKycDTO(4, 1));
+    	wrapperSmartKycDTO.setSmartKycDTOS(pieces);
+
+    	Integer highestValue = smartKycService.getChainWithHighestValue(wrapperSmartKycDTO);
+    	Assertions.assertThat(highestValue).isEqualTo(4);
+    }
 
     @Test
     void testCaseScenarioOne()
